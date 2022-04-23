@@ -6,34 +6,25 @@ import dotenv
 import os
 import pandas as pd
 
-
+from diver_config import ChromeDriver
 
 env = dotenv.load_dotenv('.env')
 
 
-class Chrome:
+class Bot:
 
     def __init__(self):
-
         self.site = 'https://www.linkedin.com/'
-        self.log = os.getenv('email')
-        self.senha = os.getenv('senha')
-        print('\n\nOIE!!\n Bora rodar..')
-        self.ser = Service('chromedriver.exe')
-        self.option = webdriver.ChromeOptions()
-        # self.option.add_argument('--headless')
-        self.driver = webdriver.Chrome(service=self.ser,
-                                       options=self.option)
-        self.driver.set_window_size(1200, 900)
+        self.driver = ChromeDriver().driver
         self.driver.get(self.site)
         self.login()
-        self.d = []
+        self.data = {}
 
     def login(self):
         self.driver.find_element(By.ID,
-                                 'session_key').send_keys(self.log)
+                                 'session_key').send_keys(os.getenv('email'))
         self.driver.find_element(By.ID,
-                                 'session_password').send_keys(self.senha)
+                                 'session_password').send_keys(os.getenv('senha'))
         self.driver.find_element(By.XPATH,
                                  '//*[@id="main-content"]/section[1]/div/div/form/button').click()
 
@@ -41,9 +32,9 @@ class Chrome:
         self.driver.close()
         print('tchau, tchau')
 
-    def conect(self, num):
+    def conect(self, num=0):
         self.pg = 1+num
-        inicio.driver.get(f'{self.site}search/results/people/?connectionOf=%5B%22ACoAACE0LVQBQqhtxtpGIVdhw-RFHGoCLQ6Z230%22%5D&network=%5B%22F%22%2C%22S%22%5D&origin=MEMBER_PROFILE_CANNED_SEARCH&sid=Frz&page={self.pg}')
+        self.driver.get(f'{self.site}search/results/people/?connectionOf=%5B%22ACoAACE0LVQBQqhtxtpGIVdhw-RFHGoCLQ6Z230%22%5D&network=%5B%22F%22%2C%22S%22%5D&origin=MEMBER_PROFILE_CANNED_SEARCH&sid=Frz&page={self.pg}')
         sleep(1.5)
         self.pg_butao = self.driver.find_elements(By.TAG_NAME, "button")
 
@@ -51,14 +42,15 @@ class Chrome:
             if conex.text == 'Conectar':
                 conex.click()
                 sleep(1)
-                for x in self.driver.find_elements(By.TAG_NAME, 'button'):
+                confirm = self.driver.find_elements(By.TAG_NAME, 'button')
+                for x in confirm:
                     if x.text == 'Enviar':
                         x.click()
                         sleep(1.5)
-                        fim = [x for x in self.driver.find_elements(By.TAG_NAME, 'button') if x.text == 'Entendi']
-                        if len(fim):
-                            print('Limite aucancado')
-                            return
+                        break
+                    if x.text == 'Entendi':
+                        print('Limite aucancado')
+                        return
 
         if self.pg < 100:
             self.conect(self.pg)
@@ -82,62 +74,79 @@ class Chrome:
                 id = ele.get_attribute('data-occludable-job-id')
                 lista_ids.append(id)
                 ele.click()
-                self.candidatura()
-                self.vaga_desc(id)
+                # self.candidatura()
+                self.vaga_descricao(id)
                 if len(lista_ids) == 24:
                     break
         datad = pd.DataFrame(self.d)
         return
 
-
-    def vaga_desc(self, id, job_page=False):
+    def vaga_descricao(self, id, job_page=False):
         title = 'h2'
         if job_page:
             title = 'h1'
         sleep(2)
-        data = {}
-
+        self.data[id] = {}
         top = self.driver.find_element(By.CLASS_NAME, 'jobs-unified-top-card')
         article = self.driver.find_element(By.CLASS_NAME, 'jobs-description__content')
 
-        local, cands, *x = top.find_elements(By.CLASS_NAME, 'jobs-unified-top-card__bullet')
+        local, *cands = top.find_elements(By.CLASS_NAME, 'jobs-unified-top-card__bullet')
+        if cands:
+            self.data[id]['candidatos'] = cands[0].text
 
-        data[id] = {'titulo': top.find_element(By.TAG_NAME, title).text,
-                    'empresa': top.find_element(By.CLASS_NAME, 'jobs-unified-top-card__company-name').text,
-                    'local': local.text, 'candidatos': cands.text,
-                    'local_trabalho': top.find_element(By.CLASS_NAME, 'jobs-unified-top-card__workplace-type').text,
-                    'data_publicacao': top.find_element(By.CLASS_NAME, 'jobs-unified-top-card__posted-date').text,
-                    'descricao': article.find_elements(By.TAG_NAME, 'span')[-1].text
-                    }
+        dia = top.find_elements(By.CLASS_NAME, 'jobs-unified-top-card__posted-date')
+        if dia:
+            self.data[id]['data_publicacao'] = dia[0].text
+
+        butao_atividade = top.find_elements(By.CLASS_NAME, 'post-apply-timeline__button-container')
+        if butao_atividade:
+            butao_atividade[0].click()
+
+        atividade = top.find_element(By.CLASS_NAME, 'post-apply-timeline').find_element(By.TAG_NAME, 'ul')
+        atividade = atividade.text.split('\n')
+        self.data[id]['atividade'] = [(atividade[ind], atividade[ind+1]) for ind in range(0, len(atividade), 2)]
+
+        article.parent.find_element(By.CLASS_NAME, 'artdeco-card__actions').click()
+        self.data[id] = {
+            'titulo': top.find_element(By.TAG_NAME, title).text,
+            'empresa': top.find_element(By.CLASS_NAME, 'jobs-unified-top-card__company-name').text,
+            'local': local.text,
+            'local_trabalho': top.find_element(By.CLASS_NAME, 'jobs-unified-top-card__workplace-type').text,
+            'descricao': article.find_element(By.ID, 'job-details').text
+                        }
         recrutador = article.find_elements(By.CLASS_NAME, 'jobs-poster__name')
         if len(recrutador):
-            data[id]['recrutador'] = recrutador[0].text
+            self.data[id]['recrutador'] = recrutador[0].text
 
         tags = top.find_elements(By.CLASS_NAME, 'jobs-unified-top-card__job-insight')
+        detalhes = []
         for elem in tags:
-            test = elem.text
-
-
+            if not elem.get_attribute('class').endswith('highlight'):
+                item = elem.text.split('·')
+                detalhes.append(item[0])
+                if len(item) > 1:
+                    detalhes.append(item[1])
+                else:
+                    detalhes.append(None)
+        self.data[id]['detalhes'] = detalhes
 
         s = 67890
-
 
     def percode(self, id):
         vaga = f'{self.site}jobs/view/{id}/'
         self.driver.get(vaga)
-        self.vaga_desc(id, job_page=True)
+        self.vaga_descricao(id, job_page=True)
 
-    def minhasvagas(self):
-        self.driver.get(f'{self.site}my-items/saved-jobs/')
+    def minhasvagas(self, start=0):
+        self.driver.get(f'{self.site}my-items/saved-jobs/?cardType=APPLIED&start={start}')
         lista_vagas = self.driver.find_element(By.CLASS_NAME, 'reusable-search__entity-result-list')
         vagas_id = [link.get_attribute('href').split('/')[5] for link in lista_vagas.find_elements(By.TAG_NAME, 'a')][::2]
         for id in vagas_id:
             self.percode(id)
 
+        self.minhasvagas(start=start+10)
 
         vaga=789
-
-
 
     def candidatura(self):
         self.driver.find_element(By.CLASS_NAME, 'jobs-apply-button--top-card').click()
@@ -146,14 +155,10 @@ class Chrome:
 
 
 
-
 if __name__ == '__main__':
+    inicio = Bot()
 
-    link = 'https://www.linkedin.com/'
-
-    inicio = Chrome()
-
-    # inicio.conect(0)
+    # inicio.conect(7)
     # inicio.vagas('analista de dados')
     inicio.minhasvagas()
     # inicio.percode(2961122950)
