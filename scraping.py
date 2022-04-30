@@ -13,9 +13,9 @@ env = dotenv.load_dotenv('.env')
 
 class Bot:
 
-    def __init__(self):
+    def __init__(self, window=True):
         self.site = 'https://www.linkedin.com/'
-        self.driver = ChromeDriver().driver
+        self.driver = ChromeDriver(window=window).driver
         self.driver.get(self.site)
         self.login()
         self.data = {}
@@ -130,8 +130,6 @@ class Bot:
                     detalhes.append(None)
         self.data[id]['detalhes'] = detalhes
 
-        s = 67890
-
     def percode(self, id):
         vaga = f'{self.site}jobs/view/{id}/'
         self.driver.get(vaga)
@@ -139,14 +137,14 @@ class Bot:
 
     def minhasvagas(self, start=0):
         self.driver.get(f'{self.site}my-items/saved-jobs/?cardType=APPLIED&start={start}')
-        lista_vagas = self.driver.find_element(By.CLASS_NAME, 'reusable-search__entity-result-list')
-        vagas_id = [link.get_attribute('href').split('/')[5] for link in lista_vagas.find_elements(By.TAG_NAME, 'a')][::2]
+        lista_vagas = {self.driver.find_elements(By.CLASS_NAME, 'app-aware-link')}
+        vagas_id = {link.get_attribute('href').split('/')[5] for link in lista_vagas}
         for id in vagas_id:
             self.percode(id)
+        if not len(vagas_id) < 10:
+            self.minhasvagas(start=start+10)
 
-        self.minhasvagas(start=start+10)
 
-        vaga=789
 
     def candidatura(self):
         self.driver.find_element(By.CLASS_NAME, 'jobs-apply-button--top-card').click()
@@ -157,11 +155,10 @@ class Bot:
 
 if __name__ == '__main__':
     inicio = Bot()
-
     # inicio.conect(7)
     # inicio.vagas('analista de dados')
-    inicio.minhasvagas()
-    # inicio.percode(2961122950)
+    # inicio.minhasvagas()
+    inicio.percode(3040865550)
     inicio.bye()
 
 
