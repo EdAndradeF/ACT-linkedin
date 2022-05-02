@@ -1,8 +1,13 @@
 #!/bin/bash
 
-git add . 
+git add .
 
-git commit -m 'automato commit'
+read txtcommt
+
+git commit -m $txtcommt
 
 git push origin main
 
+git status
+
+read txtcommttt
