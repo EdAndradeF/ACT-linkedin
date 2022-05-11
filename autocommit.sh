@@ -2,12 +2,10 @@
 
 git add .
 
-read txtcommt
-
-git commit -m $txtcommt
+git commit -m 'auto commitado'
 
 git push origin main
 
 git status
 
-read txtcommttt
+
