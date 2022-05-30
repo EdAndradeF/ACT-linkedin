@@ -4,4 +4,4 @@
 .gitignore
 *.json
 zlista.txt
-.env
+*.env
