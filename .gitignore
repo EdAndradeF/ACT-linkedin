@@ -2,6 +2,6 @@
 /test.py
 /OGLOBO.py
 .gitignore
-.json
+*.json
 zlista.txt
 .env
