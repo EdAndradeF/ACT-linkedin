@@ -4,7 +4,7 @@ git add .
 
 read varname
 
-git commit -m 'varname'
+git commit -m '$varname'
 
 git push origin main
 

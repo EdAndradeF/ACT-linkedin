@@ -59,7 +59,7 @@ class Estructor:
         self.ativid_vaga = pd.DataFrame()
         self.vagas = self.limpadados(dados)
         self.ativid_vaga.to_csv(f'data/atividade_trat_{hoje}.csv')
-  
+        self.dfs = {'vagas': self.vagas,'atividade_vaga': self.ativid_vaga}
 
     def limpadados(self, dados):
         
