@@ -36,20 +36,23 @@ class DBConn:
 
 
     def to_db(self, df, nome_tabela):
-        df.to_sql(nome_tabela, self.conn, if_exists='replace')
-    
+            df.to_sql(nome_tabela, self.conn, if_exists='replace')
+            print('FOI, FOI, SEM ERRO')
+  
+            
     def close(self):
         self.conn.close()
-
+        print('BYE, BYE!!!')
 
         
 
 if __name__ == '__main__':
     d = DBConn()
-    f = pd.read_csv('./data/atividade_trat_02-06-22.csv')
-    d.to_db(f, 'test')
+    f = {'atividade_vaga': pd.read_csv('./data/atividade_trat_02-06-22.csv')
+          ,'vagas':  pd.read_csv('data/vagas_tratas_02-06-22.csv', sep='^')} 
+    [d.to_db(df, nome) for nome, df in f.items()]
 
-
+    d.close()
 
 
 '7'
