@@ -2,7 +2,9 @@
 
 git add .
 
-git commit -m 'auto commitado'
+read varname
+
+git commit -m 'varname'
 
 git push origin main
 

@@ -1,3 +1,4 @@
+from turtle import back
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from time import sleep
@@ -6,9 +7,14 @@ import dotenv
 import os
 import pandas as pd
 import json
-from diver_config import ChromeDriver
+from driver_config import ChromeDriver
+from datetime import date
+
+
 
 env = dotenv.load_dotenv('.env')
+
+
 
 
 class Bot:
@@ -19,7 +25,7 @@ class Bot:
         self.driver.get(self.site)
         self.login()
         self.datavaga = []
-
+        self.hoje = str(date.today().strftime("%d-%m-%y"))
 
     def login(self):
         self.driver.find_element(By.ID,
@@ -93,7 +99,7 @@ class Bot:
 
         sleep(3)
         data = {}
-        data['id'] = id
+        data['id'] = int(id)
         top = self.driver.find_element(By.CLASS_NAME, 'jobs-unified-top-card')
         article = self.driver.find_element(By.CLASS_NAME, 'jobs-description__content')
 
@@ -145,7 +151,6 @@ class Bot:
         self.datavaga.append(data)
 
 
-
     def percode(self, id):
         vaga = f'{self.site}jobs/view/{id}/'
         self.driver.get(vaga)
@@ -158,12 +163,14 @@ class Bot:
         vagas_id = {link.get_attribute('href').split('/')[5] for link in lista_vagas if 'view' in link.get_attribute('href')}
         for id in vagas_id:
             self.percode(id)
+           
         if not len(vagas_id) < 10 and not test:
             self.minhasvagas(start=start+10)
         
-        with open('data.json', 'w', encoding='utf-8') as arq:
+        with open(f'data/data_backpu_{self.hoje}.json', 'w', encoding='utf-8') as arq: 
             json.dump(self.datavaga, arq, indent=4, ensure_ascii=False)
-
+        
+        return self.datavaga
 
 
     def candidatura(self):
@@ -177,11 +184,10 @@ class Bot:
 
 
 if __name__ == '__main__':
-    inicio = Bot()
+    inicio = Bot(window=False)
     # inicio.conect(7)
     # inicio.vagas('analista de dados')
     inicio.minhasvagas(test=True)
-    # inicio.percode(3040865550)
     inicio.bye()
 
 
