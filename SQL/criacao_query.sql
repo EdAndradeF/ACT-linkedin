@@ -1,39 +1,39 @@
 
-DROP TABLE IF EXISTS quantidade_funcionario;
+DROP TABLE IF EXISTS quantidade_funcionario CASCADE;
 create table quantidade_funcionario (
 	id_quantidade int PRIMARY KEY,
 	quantidade VARCHAR
 	);
 
 
-DROP TABLE IF EXISTS tipo_contratacao;
+DROP TABLE IF EXISTS tipo_contratacao CASCADE;
 create table tipo_contratacao (
 	id_tipo int PRIMARY KEY,
 	tipo VARCHAR
 	);
 
 
-DROP TABLE IF EXISTS modelo_trabalho;
+DROP TABLE IF EXISTS modelo_trabalho CASCADE;
 create table modelo_trabalho (
 	id_modelo int PRIMARY KEY,
 	modelo VARCHAR
 	);
 
 
-DROP TABLE IF EXISTS nivel_cargo;
+DROP TABLE IF EXISTS nivel_cargo CASCADE;
 create table nivel_cargo (
 	id_nivel int PRIMARY KEY,
 	nivel VARCHAR
 	);
 
 
-DROP TABLE IF EXISTS atividade;
+DROP TABLE IF EXISTS atividade CASCADE;
 create table atividade (
 	id_atividade INT PRIMARY KEY,
 	atividade VARCHAR
 	);
 
-DROP TABLE IF EXISTS vagas;
+DROP TABLE IF EXISTS vagas CASCADE;
 create table vagas (
 	id_vaga INT PRIMARY KEY,
 	titulo VARCHAR(150),
@@ -64,7 +64,7 @@ create table vagas (
 		REFERENCES quantidade_funcionario(id_quantidade)
 	);
 
-DROP TABLE IF EXISTS atividade_vaga;
+DROP TABLE IF EXISTS atividade_vaga CASCADE;
 create table atividade_vaga (
 	data DATE,
 	id_vaga INT,

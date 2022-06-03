@@ -123,7 +123,7 @@ class Bot:
         data['titulo'] = top.find_element(By.TAG_NAME, title).text
         data['empresa'] = top.find_element(By.CLASS_NAME, 'jobs-unified-top-card__company-name').text
         data['local'] = local.text
-        data['descricao'] = article.find_element(By.ID, 'job-details').text
+        
             
         local_trabalho = top.find_elements(By.CLASS_NAME, 'jobs-unified-top-card__workplace-type')
         if local_trabalho:
@@ -148,6 +148,9 @@ class Bot:
         if vaga_fechada:
             data['aceita_inscricao'] =  vaga_fechada[0].text
 
+        data['descricao'] = article.find_element(By.ID, 'job-details').text
+
+        
         self.datavaga.append(data)
 
 

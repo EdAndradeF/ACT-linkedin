@@ -1,15 +1,12 @@
-from logging import getLogger
-from os.path import abspath
+
 import pandas as pd
 import sqlalchemy as db
-import psycopg2 as psy
+from sqlalchemy.sql import select
+
+# import psycopg2 as psy
 import os
 from dotenv import load_dotenv
-
-
 env = load_dotenv('.env')
-
-
 
 class DBConn:
 
@@ -31,13 +28,19 @@ class DBConn:
         self.host = 'localhost'
         self.db_name = os.getenv('database_name')
 
-        self.eng = db.create_engine(f'{self.server}://{self.user}:{self.password}@{self.host}/{self.db_name}')
+        self.eng = db.create_engine(f'postgresql://{self.user}:{self.password}@localhost/{self.db_name}')
         self.conn = self.eng.connect()
 
 
     def to_db(self, df, nome_tabela):
-            df.to_sql(nome_tabela, self.conn, if_exists='replace')
-            print('FOI, FOI, SEM ERRO')
+        t = self.conn.execute(f'SELECT * FROM {nome_tabela};')
+        print(t)
+        self.conn.execute(f'TRUNCATE {nome_tabela} RESTART IDENTITY;')
+        t = self.conn.execute(f'SELECT * FROM {nome_tabela};')
+        print(t)
+        
+        df.to_sql(nome_tabela, self.conn, if_exists='replace')
+        print('FOI, FOI, SEM ERRO')
   
             
     def close(self):
@@ -45,6 +48,12 @@ class DBConn:
         print('BYE, BYE!!!')
 
         
+
+
+
+
+
+
 
 if __name__ == '__main__':
     d = DBConn()

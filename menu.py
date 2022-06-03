@@ -14,7 +14,7 @@ def menu():
         1 = Auto conexao
         2 = Minhas Candidaturas DataBase
         ''')
-    return input()
+    return input('>>>')
 
 funcao = menu()
 window = False
@@ -26,6 +26,7 @@ if funcao == 'w':
     funcao = menu()
 
 if funcao:
+    conex = input('CONECTAR COM POSTGREsql [S/N]\n>>> ')
     funcao = int(funcao)
     bot = scraping.Bot(window=window)
     while funcao:
@@ -35,10 +36,12 @@ if funcao:
             dados = bot.minhasvagas()
             bot.bye()
             dados_trat = trat.Estructor(dados)
-            conex = DBConn()
-            [conex.to_db(df, nome) for nome, df in dados_trat.dfs.items()]
-            conex.close()
 
+            if conex.lower() == "s":
+                conex = DBConn()
+                [conex.to_db(df, nome) for nome, df in dados_trat.dfs.items()]
+                conex.close()
+            
         funcao = menu()
 
 

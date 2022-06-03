@@ -54,12 +54,14 @@ class Estructor:
     def __repr__(self) -> str:
         return 'tratador ;)'
 
+
     def __init__(self, dados):
         
         self.ativid_vaga = pd.DataFrame()
         self.vagas = self.limpadados(dados)
         self.ativid_vaga.to_csv(f'data/atividade_trat_{hoje}.csv')
         self.dfs = {'vagas': self.vagas,'atividade_vaga': self.ativid_vaga}
+
 
     def limpadados(self, dados):
         
@@ -102,8 +104,9 @@ class Estructor:
                 linha.pop('detalhes')
             else:
                 linha['detalhes'] = None
+                
         df = pd.DataFrame(dados)
-        df.to_csv(f'data/vagas_tratas_{hoje}.csv', sep='^')
+        df.to_csv(f'data/vagas_tratas_{hoje}.csv', sep='\t')
 
         return df
 
@@ -111,78 +114,49 @@ class Estructor:
     def xplode_detalhes(self, detalhes):
         
         dict_res = {}
-        dict_res['servico'] = [x for x in detalhes if x]
 
-        for item in detalhes:
-            if not item:
+        # dict_res['servico'] = [x for x in detalhes if x]
+        remov_list = [x for x in detalhes if x]
+
+        for itemt in detalhes:  
+            if not itemt:
                 continue
-            
-            elif item in self.quantidade.keys():
-                dict_res['quantidade_funcionario'] = self.quantidade[item]
-                dict_res['servico'].remove(item)
-            
+            item = itemt.strip()
+            if item in self.quantidade.keys():
+                dict_res['quantidade_funcionario'] = self.quantidade[item]                
+        
             elif item in self.nivel.keys():
-                dict_res['nivel_cargo'] = self.nivel[item]
-                dict_res['servico'].remove(item)
+                dict_res['nivel_cargo'] = self.nivel[item]                
 
             elif item in self.tipo_contratacao.keys():
-                dict_res['tipo_contratacao'] = self.tipo_contratacao[item]
-                dict_res['servico'].remove(item)
+                dict_res['tipo_contratacao'] = self.tipo_contratacao[item]                
 
             elif item in self.modelo.keys():
-                dict_res['local_trabalho'] = self.modelo[item]
-                dict_res['servico'].remove(item)
+                dict_res['local_trabalho'] = self.modelo[item]                
 
             elif 'conex' in item:
-                dict_res['conexoes'] = self.string_int(item)
-                dict_res['servico'].remove(item)
+                dict_res['conexoes'] = self.string_int(item)                
             
             elif 'ex-estudantes' in item:
-                dict_res['conexao_ensino'] = self.string_int(item)
-                dict_res['servico'].remove(item)
+                dict_res['conexao_ensino'] = self.string_int(item)                
         
             elif 'corresponde' in item:
-                dict_res['correspondente'] = 1
-                dict_res['servico'].remove(item)
+                dict_res['correspondente'] = 1                
 
             elif 'Recrutando agora' in item:
-                dict_res['recrutando_agora'] = 1
-                dict_res['servico'].remove(item)
+                dict_res['recrutando_agora'] = 1                
 
             elif 'selo de competência' in item:
-                dict_res['selo_competencia'] = 1 
-                dict_res['servico'].remove(item)
-        
-        if not dict_res['servico']:
-            dict_res['servico'] = 0
+                dict_res['selo_competencia'] = 1    
+
+            else:
+                dict_res['servico'] = item                
+
+            remov_list.remove(itemt) 
+        if remov_list:
+            para = 'aki'
         
         return dict_res
-
-        # dict_res = {'tipo_horario': detalhes[0]}
-        # if len(detalhes) > 1:
-        #     if detalhes[1]:
-        #         dict_res['nivel_cargo'] = detalhes[1].strip()
-        # if len(detalhes) > 2:
-        #     if detalhes[2]:
-        #         dict_res['qnt_funcionarios'] = self.string_int(detalhes[2])
-        # if len(detalhes) > 3:
-        #     if detalhes[3]:
-        #         dict_res['servico_empresa'] = detalhes[3].strip()
-        # if len(detalhes) > 4:
-        #     for fora in detalhes[4:]:
-        #         if not fora:
-        #             continue
-        #         elif 'conex' in fora:
-        #             dict_res['conexoes'] = self.string_int(fora)
-        #         elif 'ex-estudantes' in fora:
-        #             dict_res['conexao_ensino'] = self.string_int(fora)
-        #         elif 'corresponde' in fora:
-        #             dict_res['perfil_corresponde'] = 1
-        #         elif 'Recrutando agora' in fora:
-        #             dict_res['recrutando_agora'] = 1
-        #         elif 'selo de competência' in fora:
-        #             dict_res['selo_de_competência'] = 1    
-        # return dict_res
 
 
     def xplode_atividade(self, atividade, id):
@@ -228,14 +202,11 @@ class Estructor:
 
 
 
-
-
-
 if __name__ == '__main__':
     
     # bot = Bot()
     # bot.minhasvagas()
-    with open('data/data.json', 'rb') as f:
+    with open('data/data_backpu_03-06-22.json', 'rb') as f:
         jason = json.loads(f.read())
     dados = Estructor(jason)
     print(dados)

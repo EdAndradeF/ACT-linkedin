@@ -2,7 +2,7 @@
 
 git add .
 
-read varname
+read $varname
 
 git commit -m '$varname'
 

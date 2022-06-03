@@ -18,7 +18,7 @@ INSERT INTO nivel_cargo (id_nivel, nivel) VALUES
 INSERT INTO modelo_trabalho (id_modelo, modelo) VALUES 
 	(1, 'Presencial'),
 	(2, 'Remoto'),
-	(3, 'Híbrido')
+	(3, 'Híbrido'),
 	(0, 'Nao-informado')
 	;
 
