@@ -14,9 +14,7 @@ class ChromeDriver:
         self.driver = webdriver.Chrome(service=self.ser,
                                        options=self.option)
         self.driver.set_window_size(1200, 900)
-
-
-
+        # self.driver.implicitly_wait(2)
 
 if __name__ == '__main__':
     g = ChromeDriver()

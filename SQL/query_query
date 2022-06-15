@@ -1,0 +1,26 @@
+select * from vagas;
+
+select 
+local,
+count(local)
+from vagas
+group by local;
+
+select 
+recrutador
+,count(recrutador) as num_recrut
+from vagas
+group by recrutador;
+
+select 
+count(empresa) as n_candidatura
+,empresa
+from vagas
+group by empresa
+order by n_candidatura desc;
+
+
+
+
+
+	

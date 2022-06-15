@@ -1,6 +1,3 @@
-from turtle import back
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from time import sleep
 from selenium.webdriver.common.by import By
 import dotenv
@@ -9,12 +6,9 @@ import pandas as pd
 import json
 from driver_config import ChromeDriver
 from datetime import date
-
-
+from selenium.common.exceptions import NoSuchElementException
 
 env = dotenv.load_dotenv('.env')
-
-
 
 
 class Bot:
@@ -44,18 +38,18 @@ class Bot:
     def conect(self, num=0):
         self.pg = 1+num
         self.driver.get(f'{self.site}search/results/people/?connectionOf=%5B%22ACoAACE0LVQBQqhtxtpGIVdhw-RFHGoCLQ6Z230%22%5D&network=%5B%22F%22%2C%22S%22%5D&origin=MEMBER_PROFILE_CANNED_SEARCH&sid=Frz&page={self.pg}')
-        sleep(1.5)
+        # sleep(1.5)
         self.pg_butao = self.driver.find_elements(By.TAG_NAME, "button")
 
         for conex in self.pg_butao:
             if conex.text == 'Conectar':
                 conex.click()
-                sleep(1)
+                # sleep(1)
                 confirm = self.driver.find_elements(By.TAG_NAME, 'button')
                 for x in confirm:
                     if x.text == 'Enviar':
                         x.click()
-                        sleep(1.5)
+                        # sleep(1.5)
                         break
                     if x.text == 'Entendi':
                         print('Limite aucancado')
@@ -66,7 +60,8 @@ class Bot:
 
 
     def vagas(self, busca, simples=True, r=2, inicio=0): #todo refatorar!!!!!!
-
+        #todo refatorar!!!!!!#todo refatorar!!!!!!
+        #todo refatorar!!!!!!#todo refatorar!!!!!!
         simplificado = f'f_AL={simples}'
         local = f'f_WT={r}'
         palavras = f'keywords={busca.replace(" ", "%20")}'
@@ -74,7 +69,7 @@ class Bot:
         page = f'start={inicio}'
         self.pesquisa = f'{self.site}jobs/search/?{simplificado}&{local}&{palavras}&{sort}&{page}'
         self.driver.get(self.pesquisa)
-        sleep(2)
+        # sleep(2)
         elementos = self.driver.find_elements(By.TAG_NAME, 'li')
         lista_ids = []
         for ele in elementos:
@@ -97,7 +92,7 @@ class Bot:
         if job_page:
             title = 'h1'
 
-        sleep(3)
+        # sleep(3)
         data = {}
         data['id'] = int(id)
         top = self.driver.find_element(By.CLASS_NAME, 'jobs-unified-top-card')
@@ -106,6 +101,8 @@ class Bot:
         local, *cands = top.find_elements(By.CLASS_NAME, 'jobs-unified-top-card__bullet')
         if cands:
             data['candidatos'] = cands[0].text
+        elif top.find_elements(By.CLASS_NAME, 'jobs-unified-top-card__applicant-count'):
+            data['candidatos'] = top.find_elements(By.CLASS_NAME, 'jobs-unified-top-card__applicant-count')[0].text
 
         dia = top.find_elements(By.CLASS_NAME, 'jobs-unified-top-card__posted-date')
         if dia:
@@ -149,29 +146,37 @@ class Bot:
             data['aceita_inscricao'] =  vaga_fechada[0].text
 
         data['descricao'] = article.find_element(By.ID, 'job-details').text
-
-        
         self.datavaga.append(data)
 
 
     def percode(self, id):
-        vaga = f'{self.site}jobs/view/{id}/'
-        self.driver.get(vaga)
-        self.vaga_descricao(id, job_page=True)
-
+        f = int(id)
+        while True:
+            try:
+                self.vaga_descricao(id, job_page=True)
+                break
+            except NoSuchElementException:
+                sleep(1.5)
+                print(f - 1)
+            
 
     def minhasvagas(self, start=0, test=False):
         self.driver.get(f'{self.site}my-items/saved-jobs/?cardType=APPLIED&start={start}')
+        sleep(2)
         lista_vagas = self.driver.find_elements(By.CLASS_NAME, 'app-aware-link')
         vagas_id = {link.get_attribute('href').split('/')[5] for link in lista_vagas if 'view' in link.get_attribute('href')}
         for id in vagas_id:
+            sleep(1.5)
+            print(len(self.datavaga))
+            vaga = f'{self.site}jobs/view/{id}/'
+            self.driver.get(vaga)
             self.percode(id)
            
-        if not len(vagas_id) < 10 and not test:
+        if len(vagas_id) and not test:
             self.minhasvagas(start=start+10)
-        
-        with open(f'data/data_backpu_{self.hoje}.json', 'w', encoding='utf-8') as arq: 
-            json.dump(self.datavaga, arq, indent=4, ensure_ascii=False)
+        if not start:
+            with open(f'data/data_backpu_{self.hoje}.json', 'w', encoding='utf-8') as arq: 
+                json.dump(self.datavaga, arq, indent=4, ensure_ascii=False)
         
         return self.datavaga
 
@@ -179,18 +184,15 @@ class Bot:
     def candidatura(self):
         self.driver.find_element(By.CLASS_NAME, 'jobs-apply-button--top-card').click()
         r = self.driver.find_element(By.TAG_NAME, 'footer').find_element(By.TAG_NAME, 'button').click()
-        s =21
-
-
-
+        s = 21
 
 
 
 if __name__ == '__main__':
-    inicio = Bot(window=False)
+    inicio = Bot(window=True)
     # inicio.conect(7)
     # inicio.vagas('analista de dados')
-    inicio.minhasvagas(test=True)
+    inicio.minhasvagas(test=False)
     inicio.bye()
 
 

@@ -87,7 +87,7 @@ class Estructor:
                 linha['data_publicacao'] = self.data_format(linha['data_publicacao'])
             else:
                 linha['data_publicacao'] = None
-                                             
+                                     
             if 'aceita_inscricao' in k:
                 linha['aberta'] = 0
             else:
@@ -110,16 +110,14 @@ class Estructor:
 
         return df
 
-
     def xplode_detalhes(self, detalhes):
-        
         dict_res = {}
-
         # dict_res['servico'] = [x for x in detalhes if x]
         remov_list = [x for x in detalhes if x]
 
         for itemt in detalhes:  
-            if not itemt:
+            
+            if not itemt or 'está contratando para esta vaga' not in itemt:
                 continue
             item = itemt.strip()
             if item in self.quantidade.keys():
