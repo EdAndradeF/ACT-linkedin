@@ -4,18 +4,18 @@ import dotenv
 import os
 import pandas as pd
 import json
-from driver_config import ChromeDriver
+from drive import Chrome
 from datetime import date
 from selenium.common.exceptions import NoSuchElementException
 
 env = dotenv.load_dotenv('.env')
 
 
-class Bot:
+class LinkedIn:
 
     def __init__(self, window=True):
         self.site = 'https://www.linkedin.com/'
-        self.driver = ChromeDriver(window=window).driver
+        self.driver = Chrome(window=window)
         self.driver.get(self.site)
         self.login()
         self.datavaga = []
@@ -189,7 +189,7 @@ class Bot:
 
 
 if __name__ == '__main__':
-    inicio = Bot(window=True)
+    inicio = LinkedIn(window=True)
     # inicio.conect(7)
     # inicio.vagas('analista de dados')
     inicio.minhasvagas(test=False)

@@ -1,9 +1,12 @@
 *.exe
-/test.py
-/OGLOBO.py
+.test.py
 *.json
 zlista.txt
 *.env
 *.csv
 /data/
- /__pycache__/
+/__pycache__/
+*.sh
+/.lenv/
+.gitignore
+*.ipynb
