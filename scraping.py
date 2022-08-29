@@ -14,12 +14,13 @@ env = dotenv.load_dotenv('.env')
 class LinkedIn:
 
     def __init__(self, window=True):
+        self.hoje = str(date.today().strftime("%d-%m-%y"))
         self.site = 'https://www.linkedin.com/'
         self.driver = Chrome(window=window)
         self.driver.get(self.site)
         self.login()
         self.datavaga = []
-        self.hoje = str(date.today().strftime("%d-%m-%y"))
+        
 
     def login(self):
         self.driver.find_element(By.ID,
