@@ -1,5 +1,10 @@
+
+from functools import reduce
+from pickletools import read_string1
+from pydoc import describe
 from time import sleep
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
 import dotenv
 import os
 import pandas as pd
@@ -11,6 +16,61 @@ from selenium.common.exceptions import NoSuchElementException
 env = dotenv.load_dotenv('.env')
 
 
+def trat(func):
+    try:
+        return func
+    except:
+        print('deu erro')
+        class cao:
+            text = None
+        return cao()
+
+def is_in(elemento, item) -> list:
+    '''reduce function
+        compara o item com elemento para defenir se item esta em elemento
+        caso se item nao fizer parte de elemteno, item se torna o elemento 
+    '''
+    if not isinstance(elemento, list):
+        elemento = [elemento]
+   
+    if item in elemento[0]:
+        elemento.append(item)
+    else:
+        elemento[0] = item                   
+    return elemento
+
+def linha0(tag:WebElement) -> dict:
+    tag1 = tag.find_element(By.CLASS_NAME, 'jobs-unified-top-card__subtitle-primary-grouping')
+    dic = {
+    'nome_empresa': trat(tag1.find_element(By.CLASS_NAME, 'jobs-unified-top-card__company-name')).text,
+    'localidade': trat(tag1.find_element(By.CLASS_NAME, 'jobs-unified-top-card__bullet')).text,
+    'local_trabalho': trat(tag1.find_element(By.CLASS_NAME,'jobs-unified-top-card__workplace-type')).text,
+    }
+    
+    tag2 =tag.find_element(By.CLASS_NAME, 'jobs-unified-top-card__subtitle-secondary-grouping')
+    dic.update({
+        'data_post': trat(tag2.find_element(By.CLASS_NAME, 'jobs-unified-top-card__posted-date')).text,
+        'quantidade_inscritos': trat(tag2.find_element(By.CLASS_NAME, 'jobs-unified-top-card__bullet')).text,
+    })              
+    dic['perfil_empresa'] = None
+    if dic['nome_empresa']:
+        dic['perfil_empresa'] = trat(
+            tag1.find_element(By.TAG_NAME, 
+                              'a')).get_attribute('href')    
+    return dic
+
+def recruter(tag:WebElement):
+    if not tag:
+        return
+    dic = {
+        'nome_recrut': tag.find_element(By.TAG_NAME, 'strong').text, 
+        
+    }
+    r = tag.find_element(By.TAG_NAME, 'a')
+    return 
+
+
+
 class LinkedIn:
 
     def __init__(self, window=True):
@@ -20,7 +80,11 @@ class LinkedIn:
         self.driver.get(self.site)
         self.login()
         self.datavaga = []
-        
+        self.lista_idVagas = set()
+        self.qnt_vagas = 0
+
+    def __repr__(self) -> str:
+        return f'<LinkedIn.Scrapper>'
 
     def login(self):
         self.driver.find_element(By.ID,
@@ -29,12 +93,6 @@ class LinkedIn:
                                  'session_password').send_keys(os.getenv('senha'))
         self.driver.find_element(By.XPATH,
                                  '//*[@id="main-content"]/section[1]/div/div/form/button').click()
-
-
-    def bye(self):
-        self.driver.close()
-        print('tchau, tchau')
-
 
     def conect(self, num=0):
         self.pg = 1+num
@@ -59,8 +117,7 @@ class LinkedIn:
         if self.pg < 100:
             self.conect(self.pg)
 
-
-    def vagas(self, busca, simples=True, r=2, inicio=0): #todo refatorar!!!!!!
+    def vagas(self, busca, simples=True, r=2, inicio=0): 
         #todo refatorar!!!!!!#todo refatorar!!!!!!
         #todo refatorar!!!!!!#todo refatorar!!!!!!
         simplificado = f'f_AL={simples}'
@@ -87,16 +144,75 @@ class LinkedIn:
         datad = pd.DataFrame(self.d)
         return
 
+    def vaga_descricao(self, id, job_page=True) -> dict:
+        ''' 
+            idealmente seria salvo o html da pagina para futuramente ser extraido os dados 
+            (com BeautifullSoup) - porém o acesso ao site necessita de certa lentidão de navegação,
+            então preferi - como uma forme de espera fazer o script olhar "manualmente" e coletar os dados 
+            durante o scraper 
 
-    def vaga_descricao(self, id, job_page=False):
-        title = 'h2'
-        if job_page:
-            title = 'h1'
+            vai estrair e separar os dados em um dicionario
+            
+            id .> id da vaga (serve como caminho add ao final de  https://www.linkedin.com/jobs/view/{id})
+            
+            job_page .> especifica se esta na pagina do vaga ou em uma pagina de busca
+            
+            return .> um dicionario com os dados da pagina
 
+        '''
+        title = 'h1' if job_page else 'h2'
+        
         # sleep(3)
-        data = {}
-        data['id'] = int(id)
-        top = self.driver.find_element(By.CLASS_NAME, 'jobs-unified-top-card')
+        data = {'id': int(id)}
+            # conteiner de detalhes sobre a empresa
+        # top = self.driver.find_element(By.CLASS_NAME, 'jobs-unified-top-card')
+
+        # data['nome_vaga'] = top.find_element(By.TAG_NAME, title).text
+        
+        # emp_loc_dat = top.find_element(By.CLASS_NAME, 'jobs-unified-top-card__primary-description')
+        # data.update(linha0(emp_loc_dat))
+
+
+        # # detalhes da empresa (tabela)
+        # listas = top.find_elements(By.TAG_NAME, 'ul')
+        # lis = []        
+        # for tags in listas:
+        #     uls = [x.text for x in tags.find_elements(By.TAG_NAME, 'li')]
+        #     lis.append(uls) 
+        # detalhes, atividade = lis
+        # data['detalhes'] = detalhes
+        # data['estagio'] = atividade[0]
+
+
+        #recrutador
+        recrutador_full = self.driver.find_element(By.CLASS_NAME, 'hirer-card__hirer-information')
+        data['recrutador'] = recruter(recrutador_full)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+        data['empresa'] = 1
+        data['pagina_empresa'] = top.find_element(By.TAG_NAME, 'a').get_attribute('href')
+
+
+
+        '''
+                            daqui pra baixo decrepitado 
+        '''
+
         article = self.driver.find_element(By.CLASS_NAME, 'jobs-description__content')
 
         local, *cands = top.find_elements(By.CLASS_NAME, 'jobs-unified-top-card__bullet')
@@ -150,36 +266,81 @@ class LinkedIn:
         self.datavaga.append(data)
 
 
-    def percode(self, id):
-        f = int(id)
+    def setQnt(self, qnt:WebElement, text:str) -> None:
+        '''
+        remove texto especificado e devolve inteiro
+            qnt WebElement .> elemento com texto e numero
+            text str .> texto a ser retirado com o metodo .strip()
+        '''
+        if not self.qnt_vagas:
+            self.qnt_vagas = int(qnt.text.strip(text))
+
+    def minhasvagas(self, start:int=0) -> None:
+        '''
+            lista todas as ids das vagas salvas como canditaturas realizadas
+
+            start int .> pagina numero da pagina inicial de vagas candidatadas 
+                        |.> de 10 em 10 
+
+            test bool .>  caso True pega apenas os links da primeira pagina
+        '''
+
+        self.driver.get(f'{self.site}my-items/saved-jobs/?cardType=APPLIED&start={start}')
+        sleep(2)
+
+        qnt = self.driver.find_element(By.CLASS_NAME, 'workflow-navigation__item')
+        self.setQnt(qnt,'Minhas vagas\n')
+
+        vagas = self.driver.find_element(By.CLASS_NAME, 'workflow-results-container')
+
+        getCode = (lambda a: '/'.join(a.get_attribute('href').split('/')[5]))
+        lista_vagas = vagas.find_elements(By.TAG_NAME, 'a')
+        id_vagas = {getCode(a) for a in lista_vagas 
+                                if '/jobs/view/' in a.get_attribute('href')}
+        self.lista_idVagas.update(id_vagas)
+
+        if start < self.qnt_vagas:
+            self.minhasvagas(start=start+10)
+            
+    def getFullVagas(self, start:int=0):
+        ''' 
+            lista todas as vagas registradas e itera para acessar 1 a 1 
+                chamando o metodo percode
+            start int .> pagina numero da pagina inicial de vagas candidatadas 
+                        |.> de 10 em 10 
+        '''
+        self.minhasvagas(start)
+        conto = len(self.lista_idVagas)
+        for url in self.lista_idVagas:
+            print(conto, len(self.lista_idVagas))
+            self.percode(url)
+
+    def percode(self, idVg):
+        self.driver.get(self.site + 'jobs/view/' + idVg)
+        idVaga = idVg
         while True:
             try:
-                self.vaga_descricao(id, job_page=True)
+                self.vaga_descricao(idVaga, job_page=True)
                 break
             except NoSuchElementException:
                 sleep(1.5)
-                print(f - 1)
-            
 
-    def minhasvagas(self, start=0, test=False):
-        self.driver.get(f'{self.site}my-items/saved-jobs/?cardType=APPLIED&start={start}')
-        sleep(2)
-        lista_vagas = self.driver.find_elements(By.CLASS_NAME, 'app-aware-link')
-        vagas_id = {link.get_attribute('href').split('/')[5] for link in lista_vagas if 'view' in link.get_attribute('href')}
-        for id in vagas_id:
-            sleep(1.5)
-            print(len(self.datavaga))
-            vaga = f'{self.site}jobs/view/{id}/'
-            self.driver.get(vaga)
-            self.percode(id)
-           
-        if len(vagas_id) and not test:
-            self.minhasvagas(start=start+10)
-        if not start:
-            with open(f'data/data_backpu_{self.hoje}.json', 'w', encoding='utf-8') as arq: 
-                json.dump(self.datavaga, arq, indent=4, ensure_ascii=False)
-        
-        return self.datavaga
+
+
+        # lista_vagas = self.driver.find_elements(By.CLASS_NAME, 'app-aware-link')
+        # vagas_id = {link.get_attribute('href').split('/')[5] for link in lista_vagas if 'view' in link.get_attribute('href')}
+        # for id in vagas_id:
+        #     sleep(1.5)
+        #     print(len(self.datavaga))
+        #     vaga = f'{self.site}jobs/view/{id}/'
+        #     self.driver.get(vaga)
+        #     self.percode(id)
+        # if len(vagas_id) and not test:
+        #     self.minhasvagas(start=start+10)
+        # if not start:
+        #     with open(f'data/data_backpu_{self.hoje}.json', 'w', encoding='utf-8') as arq: 
+        #         json.dump(self.datavaga, arq, indent=4, ensure_ascii=False)
+        # return self.datavaga
 
 
     def candidatura(self):
@@ -190,10 +351,11 @@ class LinkedIn:
 
 
 if __name__ == '__main__':
-    inicio = LinkedIn(window=True)
+    inicio = LinkedIn(window=False)
     # inicio.conect(7)
     # inicio.vagas('analista de dados')
-    inicio.minhasvagas(test=False)
+    inicio.percode('3251007156')
+    inicio.getFullVagas()
     inicio.bye()
 
 
